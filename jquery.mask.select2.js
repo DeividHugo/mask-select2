@@ -1,4 +1,4 @@
-/*! MaskSelect2 1.0.0 - MIT license - Copyright 2024 Deivid Hugo */
+/*! MaskSelect2 0.1.0 - MIT license - Copyright 2024 Deivid Hugo */
 /*! Created by Deivid Hugo to apply mask patterns to Select2 elements */
 
 (function ($) {
@@ -6,15 +6,19 @@
         /**
          * Gets the Select2 container and applies the mask pattern if needed.
          * @param {jQuery} $select - The jQuery-wrapped Select2 element.
-         * @param {string} maskPattern - The mask pattern to apply if forceMask is true.
-         * @param {boolean} forceMask - Indicates whether to enforce the mask pattern on tag creation.
+         * @param {string} maskPattern - The mask pattern to apply.
+         * @param {boolean} enableTagCreationWhenMaskComplete - Indicates whether to enforce the mask pattern on tag creation.
          * @returns {jQuery|null} The jQuery-wrapped Select2 container, or null if not found.
          */
-        static getSelect2Container($select, maskPattern, forceMask) {
+        static getSelect2Container($select, maskPattern, enableTagCreationWhenMaskComplete) {
             let select2Data = $select.data('select2');
             const originalOptions = $select.data('select2')?.options?.options || {};
 
-            if (select2Data && forceMask) {
+            if (enableTagCreationWhenMaskComplete && !originalOptions.tags) {
+                console.warn('EnableTagCreationWhenMaskComplete is true, but the tags option is disabled. Please enable tags to use this feature.');
+            } 
+
+            if (select2Data && enableTagCreationWhenMaskComplete) {
                 originalOptions.createTag = function (params) {
                     const maskLength = maskPattern.length;
                     if (params.term.length !== maskLength) {
@@ -27,7 +31,7 @@
                     $select.select2(originalOptions);
                     select2Data = $select.data('select2');
                 } catch (error) {
-                    console.warn('Unable to apply forceMask. Failed to reload Select2:', error);
+                    console.warn('Unable to apply enableTagCreationWhenMaskComplete. Failed to reload Select2:', error);
                     return null;
                 }
             }
@@ -55,10 +59,10 @@
          * to handle dynamically added search fields.
          * @param {HTMLElement} selectElement - The original select element.
          * @param {string} maskPattern - The mask pattern to apply.
-         * @param {boolean} forceMask - Indicates whether to enforce the mask pattern on tag creation.
+         * @param {boolean} enableTagCreationWhenMaskComplete - Indicates whether to enforce the mask pattern on tag creation.
          */
-        static applyMaskToSelect2($selectElement, maskPattern, forceMask = true) {
-            const $select2Container = this.getSelect2Container($selectElement, maskPattern, forceMask);
+        static applyMaskToSelect2($selectElement, maskPattern, enableTagCreationWhenMaskComplete) {
+            const $select2Container = this.getSelect2Container($selectElement, maskPattern, enableTagCreationWhenMaskComplete);
 
             if ($select2Container && $select2Container.length) {
                 this.applyMaskToSearchField($select2Container, maskPattern);
@@ -81,12 +85,12 @@
     /**
      * jQuery plugin to apply a mask pattern to Select2 elements.
      * @param {string} maskPattern - The mask pattern to apply.
-     * @param {boolean} forceMask - Indicates whether to enforce the mask pattern on tag creation.
+     * @param {boolean} enableTagCreationWhenMaskComplete - Indicates whether to enforce the mask pattern on tag creation.
      * @returns {jQuery} - The jQuery object for chaining.
      */
-    $.fn.maskSelect2 = function (maskPattern, forceMask = true) {
+    $.fn.maskSelect2 = function (maskPattern, enableTagCreationWhenMaskComplete = false) {
         this.each(function () {
-            MaskSelect2.applyMaskToSelect2($(this), maskPattern, forceMask);
+            MaskSelect2.applyMaskToSelect2($(this), maskPattern, enableTagCreationWhenMaskComplete);
         });
 
         return this;
